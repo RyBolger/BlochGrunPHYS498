@@ -1,0 +1,36 @@
+import matplotlib.pyplot as plt
+import scipy.integrate as integrate
+import math 
+import numpy as np
+
+data = np.loadtxt('0T.txt')
+temp = data[:, 0]
+res = data[:, 1]
+
+# theta R >> T therefore rho proprtional T**5 when n = 5
+# n = 5, A = 7x10**-4
+
+xdata = np.all(temp)
+res_int = np.all(res)
+upperLimit =   #1 / T
+lowerLimit = 0
+A = 7 * (10 ** -4)
+n = 5
+
+def f(x):
+    return integrate.quad(lambda k: (t**n) / ((math.exp(t)-1) * (1-math.exp(-t))), k_low, k_high)
+
+k_low = 0
+k_high =  #1 / T
+
+for item in xdata:
+    ydata1[i]=f(xdata[i])[0]
+    i = i + 1
+
+plt.figure(1,figsize(4,4))
+plt.plot(xdata, ydata, color='blue', linestyle='--')
+    
+#def f_int(t, n):
+ #   k = A * (xdata**5)
+  #      return k * ((t**n) / ((math.exp(t)-1) * (1-math.exp(-t))))
+    
