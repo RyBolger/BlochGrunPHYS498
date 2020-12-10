@@ -7,30 +7,26 @@ data = np.loadtxt('0T.txt')
 temp = data[:, 0]
 res = data[:, 1]
 
-# theta R >> T therefore rho proprtional T**5 when n = 5
-# n = 5, A = 7x10**-4
+Temp = list(temp)
+Res = list(res)
+A = 7 * (10**-4)
+T = 300
+theta_r = 230 #approx equal to debye temp
+theta_R = 230/3 #upper bound so theta_r/T
+n = 5  #2,3
 
-xdata = np.all(temp)
-res_int = np.all(res)
-upperLimit =   #1 / T
-lowerLimit = 0
-A = 7 * (10 ** -4)
-n = 5
+x2 = lambda t: (t**(n))/((math.exp(t)-1) * (1-math.exp(-t)))
+ 
+ydata = []
+dydata =[]
+lim = 0.01
+while lim <= theta_R:
+    I = integrate.quad(x2, 0, lim)
+    ydata.append(A*(T/theta_r)**n * I[0])
+    dydata.append(A*(T/theta_r)**n * I[1])
+    lim += theta_R/len(Temp)
+#return ydata
 
-def f(x):
-    return integrate.quad(lambda k: (t**n) / ((math.exp(t)-1) * (1-math.exp(-t))), k_low, k_high)
-
-k_low = 0
-k_high =  #1 / T
-
-for item in xdata:
-    ydata1[i]=f(xdata[i])[0]
-    i = i + 1
-
-plt.figure(1,figsize(4,4))
-plt.plot(xdata, ydata, color='blue', linestyle='--')
-    
-#def f_int(t, n):
- #   k = A * (xdata**5)
-  #      return k * ((t**n) / ((math.exp(t)-1) * (1-math.exp(-t))))
-    
+plt.plot(Temp, ydata)
+plt.figure()
+plt.plot(Temp, dydata)
