@@ -3,10 +3,12 @@ import scipy.integrate as integrate
 import math 
 import numpy as np
 
+#importing data from text file
 data = np.loadtxt('0T.txt')
 temp = data[:, 0]
 res = data[:, 1]
 
+#setting parameters
 Temp = list(temp)
 Res = list(res)
 A = 7 * (10**-4)
@@ -15,18 +17,27 @@ theta_r = 230 #approx equal to debye temp
 theta_R = 230/3 #upper bound so theta_r/T
 n = 5  #2,3
 
+#Integrating the BG function via a lambda function
 x2 = lambda t: (t**(n))/((math.exp(t)-1) * (1-math.exp(-t)))
  
 ydata = []
 dydata =[]
 lim = 0.01
+#Setting the upper and lower integral limits and running loop to apply integration to all values 
 while lim <= theta_R:
     I = integrate.quad(x2, 0, lim)
     ydata.append(A*(T/theta_r)**n * I[0])
     dydata.append(A*(T/theta_r)**n * I[1])
     lim += theta_R/len(Temp)
-#return ydata
 
+#plotting the data passed through the Bluch Gruneisen function
 plt.plot(Temp, ydata)
+plt.xlabel("Temperature [K]")
+plt.ylabel("Resistivity [$\Omega$]")
+plt.title("Passing data through the Bloch Gruneisen function")
+#plotting the uncertainties on the resistivity values 
 plt.figure()
 plt.plot(Temp, dydata)
+plt.xlabel("Temperature [K]")
+plt.ylabel("Resistivity [$\Omega$]")
+plt.title("Uncertainties on the resistivity values")
