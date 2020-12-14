@@ -1,0 +1,53 @@
+import numpy as np
+from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
+import scipy.integrate as integrate 
+import math
+
+data = np.loadtxt('0T.txt')
+temp = data[:, 0]
+res = data[:, 1]
+
+
+t = list(temp)
+Res = list(res)
+
+#plotting initial data
+plt.plot(t, Res, '.', ms=1)
+
+
+ydata = []
+dydata =[]
+lim = 0.01
+
+#define the BG function with all the parameters listed
+def fun(t, n, A, T, theta_r):
+    ydata = []
+    dydata = []
+    lim = 0.01
+    x2 = lambda t: (t**(n))/((math.exp(t)-1) * (1-math.exp(-t)))
+#using the BG function to generate ydata
+    while lim <= theta_r:
+        I = integrate.quad(x2, 0, lim)
+        ydata.append(A*(T/theta_r)**n * I[0])
+        dydata.append(A*(T/theta_r)**n * I[1])
+        lim += theta_r/len(t)
+    return ydata
+
+#applying the ydata to scipy.integrate (curve_fit) to determine true variance and covariance 
+popt, pcov = curve_fit(fun, t, ydata)
+popt
+
+#-----------------this is the point where I start to go wrong---------------------------------------
+
+e = np.repeat(10., 300)
+plt.errorbar(t, ydata, yerr=e, fmt="none")
+
+popt, pcov = curve_fit(fun, t, ydata, sigma=e)
+popt
+
+plt.errorbar(t, ydata, yerr=e, fmt="none")
+xfine = np.linspace(0., 300., 300) 
+plt.plot(xfine, fun(xfine, *popt), 'r-')
+
+
