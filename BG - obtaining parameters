@@ -12,8 +12,8 @@ res = data[:, 1]
 t = list(temp)
 Res = list(res)
 
-#plotting initial data
-plt.plot(t, Res, '.', ms=1)
+
+#plt.plot(t, Res, '.', ms=1)
 
 
 ydata = []
@@ -32,22 +32,30 @@ def fun(t, n, A, T, theta_r):
         ydata.append(A*(T/theta_r)**n * I[0])
         dydata.append(A*(T/theta_r)**n * I[1])
         lim += theta_r/len(t)
-    return ydata
+        #return ydata
 
-#applying the ydata to scipy.integrate (curve_fit) to determine true variance and covariance 
-popt, pcov = curve_fit(fun, t, ydata)
+#define data to be fit with some noise:
+xdata = np.linspace(0, 300, 300)
+y = fun(xdata, 300, 3, 7*10**-4, 300, 230)
+np.random.seed(1729)
+y_noise = 0.2 * np.random.normal(size=temp.size)
+yData = y + y_noise
+plt.plot(temp, yData, 'b-', label='data')
+
+#fit for the parameters a,b,c of function fun:
+popt, pcov = curve_fit(fun, temp, yData)
 popt
 
-#-----------------this is the point where I start to go wrong---------------------------------------
-
-e = np.repeat(10., 300)
-plt.errorbar(t, ydata, yerr=e, fmt="none")
-
-popt, pcov = curve_fit(fun, t, ydata, sigma=e)
+plt.plot(temp, fun(temp, *popt), 'r-', 
+         label='fit: a=%5.3f, b=%5.3f, c=%5.3f' %tuple(popt))
+#adding contraints tp the region
+popt, pcov = curve_fit(fun, temp, yData, bounds=(0,[5., (7*10**-4)., 300., 230])) 
 popt
 
-plt.errorbar(t, ydata, yerr=e, fmt="none")
-xfine = np.linspace(0., 300., 300) 
-plt.plot(xfine, fun(xfine, *popt), 'r-')
+plt.plot(temp, fun(temp, *popt), 'g--'
+        label='fit: a=%5.3f, b=%5.3f, c=%5.3f' %tuple(popt))
 
-
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend()
+plt.show()
