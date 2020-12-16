@@ -7,14 +7,8 @@ import math
 data = np.loadtxt('0T.txt')
 temp = data[:, 0]
 res = data[:, 1]
-
-
 t = list(temp)
 Res = list(res)
-
-
-#plt.plot(t, Res, '.', ms=1)
-
 
 ydata = []
 dydata =[]
