@@ -10,36 +10,34 @@ res = data[:, 1]
 t = list(temp)
 Res = list(res)
 
-ydata = []
-dydata =[]
-lim = 0.01
-n = 5
 
-#create BG function with parameters that will be optimised
+
 def Bloch(temp, A, theta_r):
     ydata = []
-    dydata = []
-    lim = 0.01
-    x2 = lambda temp: (temp**(n))/((math.exp(temp)-1) * (1-math.exp(-temp)))
-    while lim <= theta_r:
-        I = integrate.quad(x2, 0, lim)
-        ydata.append(A*(temp/theta_r)**n * I[0])
-        dydata.append(A*(temp/theta_r)**n * I[1])
-        lim += theta_r/len(temp)
-        return ydata
+    n = 5
+    for i in range (len(temp)):
+        lower, upper = 0, theta_r/temp[i]
+        x = lambda t: (t**(n))/((math.exp(t)-1) * (1-math.exp(-t)))
+        integral, error = integrate.quad(x,lower,upper)
+        ydata.append((A*(temp[i]/theta_r)**n) * integral)
+    return ydata
     
 #estimate the parameters
 
 A = 7*10**-4
 theta_r = 230
 
-#use curve fit to output optimised parameters into popt
+#use curve fit to output optimised parameters into pop
+
 popt, pcov = curve_fit(Bloch, temp, res, p0=[A,theta_r])
-popt
 A, theta_r = popt
 
 #plotting experimental, estimated parameter and fitted data
+
 plt.figure()
-plt.plot(temp, res, 'k.', ms=1)
-plt.plot(temp, ydata, 'b.', ms=1)
-plt.plot(temp, Bloch(temp, *popt),'r.', ms=1)
+plt.xlabel("Temperature [K]")
+plt.ylabel("Resistivity [$\Omega$]")
+plt.title("Fitting the Bloch Gruneisen function to the experimental data to obtain the parameters", pad=20)
+plt.plot(temp, res, 'k.', ms=1, label='data')
+plt.plot(temp, Bloch(temp, *popt),'r.', ms=1, label='fitted parameters')
+plt.legend()
