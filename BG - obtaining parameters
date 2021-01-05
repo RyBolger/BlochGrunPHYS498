@@ -12,7 +12,7 @@ Res = list(res)
 
 
 
-def Bloch(temp, alpha1, theta_r, res0, resee, resEin):
+def Bloch(temp, alpha1, theta_r, theta_e, res0, resee, resEin):
     ydata = []
     n = 5
     for i in range (len(temp)):
@@ -31,15 +31,17 @@ theta_r = 160
 res0 = 4.4*10**-9
 A = 1.4*10**-13
 KNM = 10*10**-7
+theta_e = 70
 
 def resee(temp, A):
-    return A * np.average(temp) #1.3*10**-10
+    return A * (np.average(temp))**2
+#1.3*10**-10
 def resEin (temp, KNM):
-    return (KNM/np.average(temp)) * (1 / ((math.exp(theta_r/np.average(temp))-1) * (1-math.exp(-theta_r/np.average(temp)))))
-#use curve fit to output optimised parameters into pop
+    return (KNM/np.average(temp)) * (1 / ((math.exp(theta_e/np.average(temp))-1) * (1-math.exp(-theta_e/np.average(temp)))))
+#use curve fit to output optimised parameters into popt 
 
-popt, pcov = curve_fit(Bloch, temp, res, p0=[alpha1, theta_r, res0, A, KNM])
-alpha1, theta_r, res0, A, KNM = popt
+popt, pcov = curve_fit(Bloch, temp, res, p0=[alpha1,theta_r, theta_e, res0, A, KNM])
+alpha1, theta_r, theta_e, res0, A, KNM = popt
 
 #plotting experimental, estimated parameter and fitted data
 
