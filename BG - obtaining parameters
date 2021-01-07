@@ -33,15 +33,10 @@ A = 1.4*10**-13
 KNM = 10*10**-7
 theta_e = 70
 
-#def resee(temp, A):
- #   return A * (temp)**2
-#1.3*10**-10
-#def resEin (temp, KNM, theta_e):
- #   return (KNM/temp) * (1 / ((math.exp(theta_e/temp)-1) * (1-math.exp(-theta_e/temp))))
 #use curve fit to output optimised parameters into popt 
 
-popt, pcov = curve_fit(Bloch, temp, res, p0=[alpha1,theta_r, A, KNM, theta_e, res0])
-alpha1, theta_r, A, KNM, theta_e, res0= popt
+popt, pcov = curve_fit(Bloch, temp, res, p0=[alpha1, theta_r, theta_e, A, KNM, res0])
+alpha1, theta_r, theta_e, A, KNM, res0= popt
 
 #plotting experimental, estimated parameter and fitted data
 
