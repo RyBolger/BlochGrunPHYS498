@@ -12,12 +12,12 @@ Res = list(res)
 
 
 
-def Bloch(temp, alpha1, theta_r, theta_e, res0, resee, resEin):
+def Bloch(temp, alpha1, theta_r, theta_e, A, KNM, res0, resee, resEin):
     ydata = []
     n = 5
     for i in range (len(temp)):
-        resee = A * temp**2
-        resEin = (KNM/temp) * (1 / ((math.exp(theta_e/temp)-1) * (1-math.exp(-theta_e/temp))))
+        resee = A * temp[i]**2
+        resEin = (KNM/temp[i]) * (1 / ((math.exp(theta_e/temp[i])-1) * (1-math.exp(-theta_e/temp[i]))))
         lower, upper = 0, theta_r/temp[i]
         x = lambda t: (t**(n))/((math.exp(t)-1) * (1-math.exp(-t)) + res0 + resee + resEin)
         integral, error = integrate.quad(x,lower,upper)
