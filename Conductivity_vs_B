@@ -1,0 +1,24 @@
+import numpy as np
+from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
+import scipy.integrate as integrate 
+import math
+
+
+x_data = np.arange(0, 7, 0.1)
+y_data = np.arange(0, 1000, 15)
+
+def Sig_xx(x):
+    n = 2
+    mu = 4600
+    return ((n * math.e * mu) / (1 + (mu**2) * (x)**2))
+
+i = []
+for item in str(x_data):
+    y_data[i] = Sig_xx(x_data[i])
+    i = i + 1
+    
+figure()
+plt.plot(x_data, y_data)
+plt.ylim([-1000, 1000])
+plt.xlim([0, 10])
