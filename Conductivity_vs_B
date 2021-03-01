@@ -11,7 +11,8 @@ y_data = np.arange(0, 1000, 15)
 def Sig_xx(x):
     n = 2
     mu = 4600
-    return ((n * math.e * mu) / (1 + (mu**2) * (x)**2))
+    e = 1.6*10**-19
+    return ((n * e * mu) / (1 + (mu**2) * (x)**2))
 
 i = []
 for item in x_data:
