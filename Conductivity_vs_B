@@ -14,7 +14,7 @@ def Sig_xx(x):
     return ((n * math.e * mu) / (1 + (mu**2) * (x)**2))
 
 i = []
-for item in str(x_data):
+for item in x_data:
     y_data[i] = Sig_xx(x_data[i])
     i = i + 1
     
