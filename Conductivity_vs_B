@@ -6,7 +6,7 @@ import math
 
 
 x_data = np.arange(0, 7, 0.1)
-y_data = np.arange(0, 1000, 15)
+y_data = np.arange(0, 980, 14)
 
 def Sig_xx(x):
     n = 2
@@ -17,9 +17,8 @@ def Sig_xx(x):
 i = []
 for item in x_data:
     y_data[i] = Sig_xx(x_data[i])
-    i = i + 1
+    i.append(1)
     
-figure()
 plt.plot(x_data, y_data)
 plt.ylim([0, 1000])
 plt.xlim([0, 10])
