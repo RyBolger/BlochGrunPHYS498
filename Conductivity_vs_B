@@ -8,17 +8,18 @@ import math
 x_data = np.arange(0, 7, 0.1)
 y_data = np.arange(0, 980, 14)
 
-def Sig_xx(x):
+def Sig_xx(x_data):
     n = 2
     mu = 4600
-    e = 1.6*10**-19
-    return ((n * e * mu) / (1 + (mu**2) * (x)**2))
-
+    e=1 #e = 1.6*10**-19
+    return ((n * e * mu) / (1 + ((mu**2) * (x_data)**2)))
+    
 i = []
 for item in x_data:
     y_data[i] = Sig_xx(x_data[i])
     i.append(1)
-    
-plt.plot(x_data, y_data)
+
+fig = plt.figure(1, figsize=(4,4))
+plt.plot(x_data, Sig_xx(x_data))
 plt.ylim([0, 1000])
 plt.xlim([0, 7])
