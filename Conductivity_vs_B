@@ -20,5 +20,5 @@ for item in x_data:
     
 figure()
 plt.plot(x_data, y_data)
-plt.ylim([-1000, 1000])
+plt.ylim([0, 1000])
 plt.xlim([0, 10])
