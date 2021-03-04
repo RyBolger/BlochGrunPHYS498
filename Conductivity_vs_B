@@ -4,22 +4,41 @@ import matplotlib.pyplot as plt
 import scipy.integrate as integrate 
 import math
 
+#magnetic field range 
+xdata = np.arange(0, 7, 0.1)
 
-x_data = np.arange(0, 7, 0.1)
-y_data = np.arange(0, 980, 14)
+#Conductivity tensor 
+def Sig_xx(n, mu, B):
+    e = 1.6e-19 #Charge of carriers 
+    return ((n * e * mu) / (1 + ((mu**2) * (B**2))))
 
-def Sig_xx(x_data):
-    n = 2
-    mu = 4600
-    e=1 #e = 1.6*10**-19
-    return ((n * e * mu) / (1 + ((mu**2) * (x_data)**2)))
-    
-i = []
-for item in x_data:
-    y_data[i] = Sig_xx(x_data[i])
-    i.append(1)
+def Sig_xy(n, mu, B):
+    e = 1.6e-19 #Charge of carriers 
+    #Assuming S = -1
+    return (-(n * e * mu**2 * B) / (1 + ((mu**2) * (B**2))))
 
-fig = plt.figure(1, figsize=(4,4))
-plt.plot(x_data, Sig_xx(x_data))
-plt.ylim([0, 1000])
-plt.xlim([0, 7])
+#Carrier Concentrations and Mobilities 
+n1, n2 = 1.42e8, 3.38e8 #Converted to m^-2
+mu1, mu2 = 0.46, 0.071 #Converted to m^2/Vs
+
+#Sum of Carriers Contribution
+Sigxx1 = Sig_xx(n1, mu1, xdata)
+Sigxx2 = Sig_xx(n2, mu2, xdata)
+Sig_xx = Sigxx1 + Sigxx2
+
+Sigxy1 = Sig_xy(n1, mu1, xdata)
+Sigxy2 = Sig_xy(n2, mu2, xdata)
+Sig_xy = Sigxy1 + Sigxy2
+
+#Plotting the data
+f = plt.figure()
+plt.plot(xdata, Sig_xx, 'k-', label='Longitudinal Conductivity')
+plt.plot(xdata, Sig_xy, 'r-', label='Transverse Conductivity')
+plt.xlim(0, 7)
+plt.ylim(-0.8e-11, 1.5e-11)
+plt.xlabel('B [T]')
+plt.ylabel('Conductivity [1/$\Omega$m]')
+plt.text(5.5, 0.55e-11, '$\sigma_{xx}$')
+plt.text(5.5, -0.4e-11, '$\sigma_{xy}$')
+plt.legend()
+plt.show()
