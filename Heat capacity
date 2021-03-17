@@ -1,0 +1,48 @@
+import numpy as np
+from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
+import scipy.integrate as integrate 
+import math
+
+data = np.loadtxt('heatcapacityData.txt')
+temp = data[:, 0]
+heatCapacity = data[:, 1]
+t = list(temp)
+heatCap = list(heatCapacity)
+
+#expression used to fit temperature dependencies of the heat capacity
+def Cp(temp, thetaE, a, b, thetaDa, thetaDb):
+    ydata = []
+    R = 8.3145      # J/mol*K
+    gamma = 40      # mJ/mol K^2 
+    r = 3           ####unsure about this####
+    for i in range(len(temp)):
+        Cpe = ((3*R*r) * (((thetaE/temp[i])**2 * math.exp(thetaE/temp[i]))/((math.exp(thetaE/temp[i]) - 1)**2)))
+        lower, upper = 0, thetaDa/temp[i]
+        x = lambda temp: ((temp**(4)*math.exp(temp))/(((math.exp(temp))-1)**2)
+        integral, error = integrate.quad(x,lower,upper)
+        lower2, upper2 = 0, thetaDb/temp[i]
+        x2 = lambda temp: ((temp**(4)*math.exp(temp))/(((math.exp(temp))-1)**2)
+        integral2, error2 = integrate.quad(x2,lower2,upper2)
+        ydata.append((gamma*temp[i]) + (Cpe) + (9*R*(((a*(temp[i]/thetaDa)**3)*integral)
+                                                +(b*(temp[i]/thetaDb)**3)*integral2))
+    return ydata
+                     
+#esitmate parameters
+thetaE = 70           #approx. maybe a bit higher
+a = 1                 #unsure on the value
+b = 1                 #unsure on the value
+thetaDa = 160         #unsure on the value
+thetaDb = 140         #unsure on the value
+
+#use curve fit to output optimised parameters into popt        
+popt, pcov = curve_fit(Cp, temp, heatCap, C0=[thetaE, a, b, thetaDa, thetaDb])
+thetaE, a, b, thetaDa, thetaDb = popt
+
+#plotting experimental, estimated parameter and fitted data
+plt.figure()
+plt.xlabel("Temperature [K]")
+plt.ylabel("Heat Capacity")
+plt.plot(temp, heatCap, 'k.', ms=0.5, label='data')
+plt.plot(temp, Cp(temp, *popt),'r.', ms=0.5, label='fitted parameters')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='best', borderaxespad=0.)                   
