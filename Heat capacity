@@ -16,13 +16,13 @@ def Cp(temp, thetaE, a, b, thetaDa, thetaDb):
     R = 8.3145      # J/mol*K
     gamma = 40      # mJ/mol K^2 
     r = 3           ####unsure about this####
-    for i in range(len(temp)):
+    for i in range(len(temp)): #for i in range (temp[i] >= 0) & (i < len(temp)):
         Cpe = ((3*R*r) * (((thetaE/temp[i])**2 * np.exp(thetaE/temp[i]))/((np.exp(thetaE/temp[i]) - 1)**2)))
         lower, upper = 0, thetaDa/temp[i]
-        x = lambda temp: (temp**(4)*np.exp(temp))/(((np.exp(temp))-1)**2)
+        x = lambda val: (temp**(4)*np.exp(temp)/(((np.exp(temp))-1)**2))
         integral, error = integrate.quad(x,lower,upper)
         lower2, upper2 = 0, thetaDb/temp[i]
-        x2 = lambda temp: (temp**(4)*np.exp(temp))/(((np.exp(temp))-1)**2)
+        x2 = lambda val2: (temp**(4)*np.exp(temp))/(((np.exp(temp))-1)**2)
         integral2, error2 = integrate.quad(x2,lower2,upper2)
         ydata.append((gamma*temp[i]) + (Cpe) + (9*R*(((a*(temp[i]/thetaDa)**3)*integral)
                                                 +(b*(temp[i]/thetaDb)**3)*integral2)))
