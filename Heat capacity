@@ -13,8 +13,9 @@ def Cp(temp: list, thetaE: float, a: float, b:float, thetaDa: float, thetaDb: fl
     ydata = []
     R = 8.3145      # J/mol*K
     gamma = 0.004      # J/mol K^2
-    r = 0.04           ####unsure about this####
+    r = 0.04           
     FU = 5
+
     limits = []
     limits2 = []
     integrand = lambda x: (x**(4)*np.exp(x)/(((np.exp(x))-1)**2))
@@ -26,17 +27,19 @@ def Cp(temp: list, thetaE: float, a: float, b:float, thetaDa: float, thetaDb: fl
         integral2, _ = integrate.quad(integrand,limits2[i][0], limits2[i][1])
         ydata.append((gamma*temp[i]) + FU*((Cpe[i]) + (9*R*(((a*(temp[i]/thetaDa)**3)*integral) + (b*(temp[i]/thetaDb)**3)*integral2))))
     return ydata
+
 #esitmate parameters
-thetaE = 65           #approx. maybe a bit higher
-a = 0.68                 #unsure on the value
-b = 0.32                 #unsure on the value
-thetaDa = 174         #unsure on the value
-thetaDb = 450         #unsure on the value
+thetaE = 65           
+a = 0.68              
+b = 0.32              
+thetaDa = 174         
+thetaDb = 450         
+
 #use curve fit to output optimised parameters into popt
 #popt, pcov = curve_fit(Cp, temp, heatCapacity, p0=[thetaE, a, b, thetaDa, thetaDb], maxfev=2000)
 #thetaE, a, b, thetaDa, thetaDb = popt
-
 #plotting experimental, estimated parameter and fitted data
+
 f = plt.figure(figsize=(15,15))
 ax = f.add_subplot(221)
 plt.xlabel("Temperature [K]")
@@ -72,4 +75,5 @@ plt.xlim([1,400])
 plt.ylim([0.001,1000])
 plt.xscale('log')
 plt.yscale('log')
+
 plt.show()
