@@ -3,18 +3,20 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import scipy.integrate as integrate 
 import math
-
 data = np.loadtxt('heatcapacityData.txt')
 temp = data[:, 0]
 heatCapacity = data[:, 1]
 t = list(temp)
 heatCap = list(heatCapacity)
 
+
+
 def Cp(temp: list, thetaE: float, a: float, b:float, thetaDa: float, thetaDb: float):
     ydata = []
     R = 8.3145      # J/mol*K
-    gamma = 40      # mJ/mol K^2
-    r = 3           ####unsure about this####
+    gamma = 0.004      # J/mol K^2
+    r = 0.04           ####unsure about this####
+    FU = 5
 
     limits = []
     limits2 = []
@@ -22,27 +24,58 @@ def Cp(temp: list, thetaE: float, a: float, b:float, thetaDa: float, thetaDb: fl
     Cpe = [((3*R*r) * (((thetaE/x)**2 * np.exp(thetaE/x))/((np.exp(thetaE/x) - 1)**2))) for x in temp]
     [limits.append((0, thetaDa/x)) for x in temp]
     [limits2.append((0, thetaDb/x)) for x in temp]
-
     for i in range(len(temp)):
         integral, _ = integrate.quad(integrand, limits[i][0], limits[i][1])
         integral2, _ = integrate.quad(integrand,limits2[i][0], limits2[i][1])
-        ydata.append((gamma*temp[i]) + (Cpe[i]) + (9*R*(((a*(temp[i]/thetaDa)**3)*integral) + (b*(temp[i]/thetaDb)**3)*integral2)))
+        ydata.append((gamma*temp[i]) + FU*((Cpe[i]) + (9*R*(((a*(temp[i]/thetaDa)**3)*integral) + (b*(temp[i]/thetaDb)**3)*integral2))))
     return ydata
 
 #esitmate parameters
-thetaE = 70           #approx. maybe a bit higher
-a = 1                 #unsure on the value
-b = 1                 #unsure on the value
-thetaDa = 160         #unsure on the value
-thetaDb = 140         #unsure on the value
+thetaE = 65           #approx. maybe a bit higher
+a = 0.68                 #unsure on the value
+b = 0.32                 #unsure on the value
+thetaDa = 174         #unsure on the value
+thetaDb = 450         #unsure on the value
 
 #use curve fit to output optimised parameters into popt
-popt, pcov = curve_fit(Cp, temp, heatCap, p0=[thetaE, a, b, thetaDa, thetaDb])
-thetaE, a, b, thetaDa, thetaDb = popt
+#popt, pcov = curve_fit(Cp, temp, heatCapacity, p0=[thetaE, a, b, thetaDa, thetaDb], maxfev=2000)
+#thetaE, a, b, thetaDa, thetaDb = popt
 
-	@@ -45,4 +47,5 @@ plt.xlabel("Temperature [K]")
+#plotting experimental, estimated parameter and fitted data
+plt.figure(1)
+plt.subplot(331)
+plt.xlabel("Temperature [K]")
 plt.ylabel("Heat Capacity")
-plt.plot(temp, heatCap, 'k.', ms=0.5, label='data')
-plt.plot(temp, Cp(temp, *popt),'r.', ms=0.5, label='fitted parameters')
-plt.legend(bbox_to_anchor=(1.05, 1), loc='best', borderaxespad=0.)
+plt.plot(temp, heatCap, 'k.', ms=0.5)
+plt.plot(temp, Cp(temp, thetaE, a, b, thetaDa, thetaDb),'r', ms=0.5)
+plt.xlim([1,250])
+plt.ylim([0,150])
+
+plt.subplot(333)
+plt.xlabel("Temperature$^2$ [K$^2$]")
+plt.ylabel("Heat Capacity/T")
+plt.plot(temp**2, heatCap/temp, 'k.', ms=0.5)
+plt.plot(temp**2, Cp(temp, thetaE, a, b, thetaDa, thetaDb)/temp,'r', ms=0.5)
+plt.xlim([1,40])
+plt.ylim([0,0.075])
+
+plt.subplot(337)
+plt.xlabel("Temperature [K]")
+plt.ylabel("Heat Capacity/T$^3$")
+plt.plot(temp, heatCap/temp**3, 'k.', ms=0.5)
+plt.plot(temp, Cp(temp, thetaE, a, b, thetaDa, thetaDb)/temp**3,'r', ms=0.5)
+plt.xlim([1,250])
+plt.ylim([0,0.003])
+plt.xscale('log')
+
+plt.subplot(339)
+plt.xlabel("Temperature [K]")
+plt.ylabel("Heat Capacity")
+plt.plot(temp, heatCap, 'k.', ms=0.5)
+plt.plot(temp, Cp(temp, thetaE, a, b, thetaDa, thetaDb),'r', ms=0.5)
+plt.xlim([1,400])
+plt.ylim([0.001,1000])
+plt.xscale('log')
+plt.yscale('log')
+
 plt.show()
