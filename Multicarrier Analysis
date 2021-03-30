@@ -1,17 +1,21 @@
 import sympy as sp
-import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt 
 import math
+import symfit
 from symfit import Variable, Parameter, Fit, Model
 from symfit.contrib.interactive_guess import InteractiveGuess
+import numpy as np
 
 data = np.loadtxt('PdSn4_010K_rhoData.txt')
 xdata = np.array(data[:, 0])
+xdata.shape
 rhoxx = np.array(data[:, 1])
+rhoxx.shape
 rhoxy = np.array(data[:, 2])
+rhoxy.shape
 
-print(data)
+#print(data)
 #plt.figure()
 #plt.plot(xdata, rhoxy)
 #plt.figure()
@@ -25,7 +29,8 @@ def sigxy(xdata,q,n,meff,e,tau):
     tau = 4e-12
     rhoi = meff / (n * (e)**2 * tau)
     for i in range (len(xdata)):
-        return ((xdata[i])/(q*n*((rhoi)**2 + (xdata[i]/q*n)**2)))
+        ydata.append(((xdata[i])/(q*n*((rhoi)**2 + (xdata[i]/q*n)**2))))
+    return np.array(ydata)
     
 def rhoxy(xdata,q,n,meff,e,tau):
     return 1 / sigxy(xdata,q,n,meff,e,tau)
@@ -65,6 +70,9 @@ guess.execute()
 print(guess)
 
 
-fit = Fit(model, x=xdata, y1=rhoxy(xdata,q,n,meff,e,tau)) #z=rhoxx)
+fit = Fit(model, x=xdata.shape, y1=rhoxy(xdata,q,n,meff,e,tau)) #z=rhoxx)
 fit_result = fit.execute()
 print(fit_result)
+
+
+plt.plot(fit_result)
