@@ -73,6 +73,3 @@ print(guess)
 fit = Fit(model, x=xdata.shape, y1=rhoxy(xdata,q,n,meff,e,tau)) #z=rhoxx)
 fit_result = fit.execute()
 print(fit_result)
-
-
-plt.plot(fit_result)
