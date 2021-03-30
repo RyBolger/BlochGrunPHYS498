@@ -1,0 +1,70 @@
+import sympy as sp
+import numpy as np
+from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt 
+import math
+from symfit import Variable, Parameter, Fit, Model
+from symfit.contrib.interactive_guess import InteractiveGuess
+
+data = np.loadtxt('PdSn4_010K_rhoData.txt')
+xdata = np.array(data[:, 0])
+rhoxx = np.array(data[:, 1])
+rhoxy = np.array(data[:, 2])
+
+print(data)
+#plt.figure()
+#plt.plot(xdata, rhoxy)
+#plt.figure()
+#plt.plot(xdata, rhoxx)
+
+def sigxy(xdata,q,n,meff,e,tau):
+    ydata = []
+    meff = 0.11 * 9.11e-31
+    n = 1.58e21
+    e = 1.6e-19
+    tau = 4e-12
+    rhoi = meff / (n * (e)**2 * tau)
+    for i in range (len(xdata)):
+        return ((xdata[i])/(q*n*((rhoi)**2 + (xdata[i]/q*n)**2)))
+    
+def rhoxy(xdata,q,n,meff,e,tau):
+    return 1 / sigxy(xdata,q,n,meff,e,tau)
+
+    
+    
+## sigxx ##
+
+#q, n, meff, e, tau = parameters('q, n, meff, e, tau')
+#x, y, z = variables('x, y, z')
+x = Variable('x')       # B
+y1 = Variable('y1')     # rhoxy
+y2 = Variable('y2')     #rhoxx
+q = Parameter('q', 1.6e-19)
+n = Parameter('n', 1.58e21)
+meff = Parameter('meff', 0.11*9.11e-31)
+e = Parameter('e', 1.6e-19)
+tau = Parameter('tau', 4e-12)
+
+model ==  {
+    y1: ((x)/(q*n*((meff/n*e**2*tau)**2 + (x/q*n)**2))) 
+    
+    #y2: sigxx(xdata)  
+}
+
+model = Model(model)
+
+#Generate example data
+x_data = np.linspace(0, 8, 50)
+data = model(x=x_data, q=1.6e-19, n=1.58e21, meff=0.11*9.11e-31, e=1.6e-19, tau=4e-12)
+y1_data = data.y1
+#y2_data = data.y2
+
+
+guess = InteractiveGuess(model, x=x_data, y1=y1_data, n_points=250)#y2=y2_data, n_points=250)
+guess.execute()
+print(guess)
+
+
+fit = Fit(model, x=xdata, y1=rhoxy(xdata,q,n,meff,e,tau)) #z=rhoxx)
+fit_result = fit.execute()
+print(fit_result)
