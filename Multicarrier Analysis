@@ -9,15 +9,15 @@ import numpy as np
 
 data = np.loadtxt('PdSn4_010K_rhoData.txt')
 xdata = np.array(data[:, 0])
-xdata.shape
 rhoxx = np.array(data[:, 1])
-rhoxx.shape
 rhoxy = np.array(data[:, 2])
-rhoxy.shape
 
 #print(data)
-#plt.figure()
-#plt.plot(xdata, rhoxy)
+plt.figure()
+plt.xlim([0, 8])
+plt.plot(xdata, rhoxy)
+plt.show()
+
 #plt.figure()
 #plt.plot(xdata, rhoxx)
 
@@ -50,14 +50,14 @@ meff = Parameter('meff', 0.11*9.11e-31)
 e = Parameter('e', 1.6e-19)
 tau = Parameter('tau', 4e-12)
 
-model ==  {
-    y1: ((x)/(q*n*((meff/n*e**2*tau)**2 + (x/q*n)**2))) 
+model = {
+    y1: (x) / (q*n*(((meff/n*e**2*tau)**2) + ((x/q*n)**2)))
     
     #y2: sigxx(xdata)  
 }
 
 model = Model(model)
-
+print(Model(model))
 #Generate example data
 x_data = np.linspace(0, 8, 50)
 data = model(x=x_data, q=1.6e-19, n=1.58e21, meff=0.11*9.11e-31, e=1.6e-19, tau=4e-12)
@@ -70,6 +70,6 @@ guess.execute()
 print(guess)
 
 
-fit = Fit(model, x=xdata.shape, y1=rhoxy(xdata,q,n,meff,e,tau)) #z=rhoxx)
+fit = Fit(model, x=xdata, y1=rhoxy(xdata,q,n,meff,e,tau)) #z=rhoxx)
 fit_result = fit.execute()
 print(fit_result)
