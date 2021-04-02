@@ -1,75 +1,140 @@
 import sympy as sp
+from sympy.functions.special.delta_functions import DiracDelta
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt 
 import math
 import symfit
-from symfit import Variable, Parameter, Fit, Model
+from symfit import Variable, Parameter, Fit, Model, cosh
 from symfit.contrib.interactive_guess import InteractiveGuess
 import numpy as np
 
+
 data = np.loadtxt('PdSn4_010K_rhoData.txt')
 xdata = np.array(data[:, 0])
-rhoxx = np.array(data[:, 1])
-rhoxy = np.array(data[:, 2])
+rhoxx_exp = np.array(data[:, 1])
+rhoxy_exp = np.array(data[:, 2])
 
-#print(data)
-plt.figure()
-plt.xlim([0, 8])
-plt.plot(xdata, rhoxy)
-plt.show()
 
-#plt.figure()
-#plt.plot(xdata, rhoxx)
 
-def sigxy(xdata,q,n,meff,e,tau):
-    ydata = []
-    meff = 0.11 * 9.11e-31
-    n = 1.58e21
-    e = 1.6e-19
-    tau = 4e-12
-    rhoi = meff / (n * (e)**2 * tau)
-    for i in range (len(xdata)):
-        ydata.append(((xdata[i])/(q*n*((rhoi)**2 + (xdata[i]/q*n)**2))))
+def sigxy(B,n,mu):
+    ydata = []   
+    q = 1.6e-19
+    R = -1 / (q*n)
+    rho = 1 / (abs(n) * q * mu)
+    for i in range (len(B)):
+        ydata.append( - (R * B[i]) / (rho**2 + (R*B[i])**2) )
+    return np.array(ydata)
+
+def sigxx(B,n,mu):
+    ydata = []   
+    q = 1.6e-19
+    R = -1 / (q*n)
+    rho = 1 / (abs(n) * q * mu)
+    for i in range (len(B)):
+        ydata.append( rho / (rho**2 + (R*B[i])**2) )
     return np.array(ydata)
     
-def rhoxy(xdata,q,n,meff,e,tau):
-    return 1 / sigxy(xdata,q,n,meff,e,tau)
 
+
+#Carrier Concentrations and Mobilities 
+n1, n2, n3, n4 = 1.51e27, -1.519e27, 0.915e27, -1.047e27
+mu1, mu2, mu3, mu4 = 1.41, 0.64, 0.087, 0.09
+
+#Sum of Carriers Contribution
+sigxy1 = sigxy(xdata, n1, mu1)
+sigxy2 = sigxy(xdata, n2, mu2)
+sigxy3 = sigxy(xdata, n3, mu3)
+sigxy4 = sigxy(xdata, n4, mu4)
+sigxy = (sigxy1 + sigxy2 + sigxy3 + sigxy4)
+
+sigxx1 = sigxx(xdata, n1, mu1)
+sigxx2 = sigxx(xdata, n2, mu2)
+sigxx3 = sigxx(xdata, n3, mu3)
+sigxx4 = sigxx(xdata, n4, mu4)
+sigxx = (sigxx1 + sigxx2 + sigxx3 + sigxx4)
+
+#resistivity tensor components
+rhoxx = sigxx / (sigxx**2 + sigxy**2)
+rhoxy = - sigxy / (sigxx**2 +sigxy**2)
+
+#ionized impurity scattering for rhoxx
+def IIS(B,a,f):
+    ydata = []    
+    for i in range (len(B)):
+        ydata.append( a / (np.cosh(B[i]/f)) )
+    return np.array(ydata)
+
+#IIS constant
+a = 1.1513
+f = 0.992
+
+#IIS magnetoresistance contribution
+rho_IIS = rhoxx * IIS(xdata,a,f)
+
+#total longitudinal magnetoresistance
+rhoxx_tot = rhoxx + rho_IIS
+
+f = plt.figure(figsize=(15,15))
+ax = f.add_subplot(211)
+plt.xlabel("Magnetic Field [T]")
+plt.ylabel("Rho$_{xx}$")
+plt.plot(xdata, rhoxx_exp, 'k.')
+plt.plot(xdata, rhoxx, 'r-')
+plt.plot(xdata, rhoxx_tot, 'b-')
+plt.xlim([0,8])
+
+
+ax2 = f.add_subplot(212)
+plt.xlabel("Magnetic Field [T]")
+plt.ylabel("Rho$_{xy}$")
+plt.plot(xdata, rhoxy_exp, 'k.')
+plt.plot(xdata, rhoxy, 'r-')
+plt.xlim([0,8])
+
+plt.show()
+
+B, y1, y2 = variables('B, y1, y2')
+n = Parameter('n', value=1e27, min=-1e27, max=1.6e27)
+mu = Parameter('mu', value=0.6, min=0.08, max=1.5)
+n, mu = parameters('n, mu')
+
+a = 1.1513
+f = 0.992
+q = 1.6e-19
+R = -1 / (q*n)
+rho = 1 / (abs(n) * q * mu)
     
-    
-## sigxx ##
-
-#q, n, meff, e, tau = parameters('q, n, meff, e, tau')
-#x, y, z = variables('x, y, z')
-x = Variable('x')       # B
-y1 = Variable('y1')     # rhoxy
-y2 = Variable('y2')     #rhoxx
-q = Parameter('q', 1.6e-19)
-n = Parameter('n', 1.58e21)
-meff = Parameter('meff', 0.11*9.11e-31)
-e = Parameter('e', 1.6e-19)
-tau = Parameter('tau', 4e-12)
-
 model = {
-    y1: (x) / (q*n*(((meff/n*e**2*tau)**2) + ((x/q*n)**2)))
+
+    y1: (( rho / (rho**2 + (R*B)**2) )* (1/(( rho / (rho**2 + (R*B)**2) )**2) + 
+                                          (- (R * B) / (rho**2 + (R*B)**2))**2)) + 
+                                              (a/cosh(B/f)) ,
     
-    #y2: sigxx(xdata)  
+    #(1 / (abs(n) * q * mu)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2) *
+     #   (1 / (((1 / (abs(n) * q * mu)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2))**2 + 
+      #  ((-B / (q*n)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2))**2)) + 
+       # (a / cosh(B / f)) ,
+       
+    y2: -(- (R * B) / (rho**2 + (R*B)**2)) * ((1/((( rho / (rho**2 + (R*B)**2) )**2) + 
+                                          (- (R * B) / (rho**2 + (R*B)**2))**2)))
+    
+    
+    
+    #- ((-B / (q*n)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2)) * 
+     #     (1 / (((1 / (abs(n) * q * mu)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2))**2 + 
+      #    ((-B / (q*n)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2))**2))
 }
 
 model = Model(model)
-print(Model(model))
-#Generate example data
-x_data = np.linspace(0, 8, 50)
-data = model(x=x_data, q=1.6e-19, n=1.58e21, meff=0.11*9.11e-31, e=1.6e-19, tau=4e-12)
-y1_data = data.y1
-#y2_data = data.y2
+#data = model(B=xdata, n=n, mu=mu)
+#print(data)
+#y1 = data.y1
+#y2 = data.y2
 
-
-guess = InteractiveGuess(model, x=x_data, y1=y1_data, n_points=250)#y2=y2_data, n_points=250)
-guess.execute()
-print(guess)
-
-
-fit = Fit(model, x=xdata, y1=rhoxy(xdata,q,n,meff,e,tau)) #z=rhoxx)
+fit = Fit(model, B=xdata, y1=rhoxx, y2=rhoxy)
 fit_result = fit.execute()
-print(fit_result)
+y1result, y2result = fit.model(B=xdata, **fit_result.params)
+plt.figure()
+plt.plot(xdata, y1)
+plt.firgure()
+plt.plot(xdata, y2)
