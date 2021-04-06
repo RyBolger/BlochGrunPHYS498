@@ -4,9 +4,10 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt 
 import math
 import symfit
-from symfit import Variable, Parameter, Fit, Model, cosh
+from symfit import Variable, Parameter, parameters, Fit, Model, cosh
 from symfit.contrib.interactive_guess import InteractiveGuess
 import numpy as np
+plt.ion()
 
 
 data = np.loadtxt('PdSn4_010K_rhoData.txt')
@@ -93,48 +94,98 @@ plt.xlim([0,8])
 
 plt.show()
 
-B, y1, y2 = variables('B, y1, y2')
-n = Parameter('n', value=1e27, min=-1e27, max=1.6e27)
-mu = Parameter('mu', value=0.6, min=0.08, max=1.5)
-n, mu = parameters('n, mu')
+B = Variable('B')
+rhoXXModel = Variable('y1')
+rhoXYModel = Variable('y2')
+n_1 = Parameter('n1', value=1.58e21, min=0.9e21, max=1.6e21)
+n_2 = Parameter('n2', value=1.52e21, min=0.9e21, max=1.6e21)
+n_3 = Parameter('n3', value=0.92e21, min=0.9e21, max=1.6e21)
+n_4 = Parameter('n4', value=1.05e21, min=0.9e21, max=1.6e21)
+mu_1 = Parameter('mu1', value=1.46e4, min=0.08e4, max=1.5e4)
+mu_2 = Parameter('mu2', value=0.66e4, min=0.08e4, max=1.5e4)
+mu_3 = Parameter('mu3', value=0.08e4, min=0.08e4, max=1.5e4)
+mu_4 = Parameter('mu4', value=0.09e4, min=0.08e4, max=1.5e4)
 
 a = 1.1513
 f = 0.992
 q = 1.6e-19
-R = -1 / (q*n)
-rho = 1 / (abs(n) * q * mu)
-    
-model = {
 
-    y1: (( rho / (rho**2 + (R*B)**2) )* (1/(( rho / (rho**2 + (R*B)**2) )**2) + 
-                                          (- (R * B) / (rho**2 + (R*B)**2))**2)) + 
-                                              (a/cosh(B/f)) ,
+R1 = -1 / (q*n_1)
+R2 = -1 / (q*n_2)
+R3 = -1 / (q*n_3)
+R4 = -1 / (q*n_4)
+
+rho1 = 1 / (abs(n_1) * q * mu_1)
+rho2 = 1 / (abs(n_2) * q * mu_2)
+rho3 = 1 / (abs(n_3) * q * mu_3)
+rho4 = 1 / (abs(n_4) * q * mu_4)
+    
+dictionary = {
+
+    y1: ((((( rho1 / (rho1**2 + (R1*B)**2) )* (1/(( rho1 / (rho1**2 + (R1*B)**2) )**2) + 
+                                          (- (R1 * B) / (rho1**2 + (R1*B)**2))**2)) + 
+                                              (a/cosh(B/f))) 
+          /  ((- (R1 * B) / (rho1**2 + (R1*B)**2) )**2 + (rho1 / (rho1**2 + (R1*B)**2))**2))
+    +
+    (((( rho2 / (rho2**2 + (R2*B)**2) )* (1/(( rho2 / (rho2**2 + (R2*B)**2) )**2) + 
+                                          (- (R2 * B) / (rho2**2 + (R2*B)**2))**2)) + 
+                                              (a/cosh(B/f)))
+         /  ((- (R2 * B) / (rho2**2 + (R2*B)**2) )**2 + (rho2 / (rho2**2 + (R2*B)**2))**2))
+    +
+    (((( rho3 / (rho3**2 + (R3*B)**2) )* (1/(( rho3 / (rho3**2 + (R3*B)**2) )**2) + 
+                                          (- (R3 * B) / (rho3**2 + (R3*B)**2))**2)) + 
+                                              (a/cosh(B/f)))
+        /  ((- (R3 * B) / (rho3**2 + (R3*B)**2) )**2 + (rho3 / (rho3**2 + (R3*B)**2))**2))
+    +
+    (((( rho4 / (rho4**2 + (R4*B)**2) )* (1/(( rho4 / (rho4**2 + (R4*B)**2) )**2) + 
+                                          (- (R4 * B) / (rho4**2 + (R4*B)**2))**2)) + 
+                                              (a/cosh(B/f))) 
+    /  ((- (R4 * B) / (rho4**2 + (R4*B)**2) )**2 + (rho4 / (rho4**2 + (R4*B)**2))**2))),
     
     #(1 / (abs(n) * q * mu)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2) *
      #   (1 / (((1 / (abs(n) * q * mu)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2))**2 + 
       #  ((-B / (q*n)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2))**2)) + 
        # (a / cosh(B / f)) ,
        
-    y2: -(- (R * B) / (rho**2 + (R*B)**2)) * ((1/((( rho / (rho**2 + (R*B)**2) )**2) + 
-                                          (- (R * B) / (rho**2 + (R*B)**2))**2)))
+    y2: (-((-(- (R1 * B) / (rho1**2 + (R1*B)**2)) * ((1/((( rho1 / (rho1**2 + (R1*B)**2) )**2) + 
+                                          (- (R1 * B) / (rho1**2 + (R1*B)**2))**2)))
+           / ((- (R1 * B) / (rho1**2 + (R1*B)**2) )**2 + (rho1 / (rho1**2 + (R1*B)**2))**2))
     
+    +
+    (-(- (R2 * B) / (rho2**2 + (R2*B)**2)) * ((1/((( rho2 / (rho2**2 + (R2*B)**2) )**2) + 
+                                          (- (R2 * B) / (rho2**2 + (R2*B)**2))**2)))
+          / ((- (R2 * B) / (rho2**2 + (R2*B)**2) )**2 + (rho2 / (rho2**2 + (R2*B)**2))**2))
     
+    +
+    (-(- (R3 * B) / (rho3**2 + (R3*B)**2)) * ((1/((( rho3 / (rho3**2 + (R3*B)**2) )**2) + 
+                                          (- (R3 * B) / (rho3**2 + (R3*B)**2))**2)))
+    / ((- (R3 * B) / (rho3**2 + (R3*B)**2) )**2 + (rho3 / (rho3**2 + (R3*B)**2))**2))
+    
+    +
+    (-(- (R4 * B) / (rho4**2 + (R4*B)**2)) * ((1/((( rho4 / (rho4**2 + (R4*B)**2) )**2) + 
+                                          (- (R4 * B) / (rho4**2 + (R4*B)**2))**2))))
+    
+    / ((- (R4 * B) / (rho4**2 + (R4*B)**2) )**2 + (rho4 / (rho4**2 + (R4*B)**2))**2)))
     
     #- ((-B / (q*n)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2)) * 
      #     (1 / (((1 / (abs(n) * q * mu)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2))**2 + 
       #    ((-B / (q*n)) / ((1 / (abs(n) * q * mu))**2 + (-B / (q*n))**2))**2))
 }
 
-model = Model(model)
-#data = model(B=xdata, n=n, mu=mu)
+model = Model(dictionary)
+#print(model)
+#####get this bloch working#####
+model_sim = model(B=xdata, n1=n1, n2=n2, n3=n3, n4=n4, mu1=mu1, mu2=mu2, mu3=mu3, mu4=mu4)
 #print(data)
-#y1 = data.y1
-#y2 = data.y2
+rho_xx_sim = model_sim.y1
+rho_xy_sim = model_sim.y2
+plt.plot(xdata,rho_xx_sim)
+plt.show
 
-fit = Fit(model, B=xdata, y1=rhoxx, y2=rhoxy)
-fit_result = fit.execute()
-y1result, y2result = fit.model(B=xdata, **fit_result.params)
-plt.figure()
-plt.plot(xdata, y1)
-plt.firgure()
-plt.plot(xdata, y2)
+#fit = Fit(model, B=xdata, y1=rhoxx, y2=rhoxy)
+#fit_result = fit.execute()
+#y1result, y2result = fit.model(B=xdata, **fit_result.params)
+#plt.figure()
+#plt.plot(xdata, y1)
+#plt.firgure()
+#plt.plot(xdata, y2)
