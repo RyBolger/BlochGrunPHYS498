@@ -1,9 +1,10 @@
 import sympy as sp
-from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions import *
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt 
 import math
 import symfit
+from symfit import DiracDelta
 from symfit import Variable, Parameter, parameters, Fit, Model, cosh
 from symfit.contrib.interactive_guess import InteractiveGuess
 import numpy as np
@@ -62,7 +63,7 @@ rhoxy = - sigxy / (sigxx**2 + sigxy**2)
 def IIS(B,a,f):
     ydata = []    
     for i in range (len(B)):
-        ydata.append( a / (np.cosh(B[i]/f)) )
+        ydata.append( a / (sp.cosh(B[i]/f)) )
     return np.array(ydata)
 
 #IIS constant
@@ -97,14 +98,14 @@ plt.show()
 B = Variable('B')
 y1 = Variable('y1')
 y2 = Variable('y2')
-n_1 = Parameter('n1', value=n1, min=0.9e21, max=1.6e21) 
-n_2 = Parameter('n2', value=n2, min=0.9e21, max=1.6e21)
-n_3 = Parameter('n3', value=n3, min=0.9e21, max=1.6e21)
-n_4 = Parameter('n4', value=n4, min=0.9e21, max=1.6e21)
-mu_1 = Parameter('mu1', value=mu1, min=0.08e4, max=1.5e4)
-mu_2 = Parameter('mu2', value=mu2, min=0.08e4, max=1.5e4)
-mu_3 = Parameter('mu3', value=mu3, min=0.08e4, max=1.5e4)
-mu_4 = Parameter('mu4', value=mu4, min=0.08e4, max=1.5e4)
+n_1 = Parameter('n1', value=n1, min=1.5e27, max=1.55e27) 
+n_2 = Parameter('n2', value=n2, min=-1.52e27, max=-1.51e27)
+n_3 = Parameter('n3', value=n3, min=0.91e27, max=0.92e27)
+n_4 = Parameter('n4', value=n4, min=-1.05e27, max=-1.045e27)
+mu_1 = Parameter('mu1', value=mu1, min=1.4, max=1.42)
+mu_2 = Parameter('mu2', value=mu2, min=0.63, max=0.65)
+mu_3 = Parameter('mu3', value=mu3, min=0.085, max=0.09)
+mu_4 = Parameter('mu4', value=mu4, min=0.088, max=0.092)
 
 a = 1.1513
 f = 0.992
@@ -190,6 +191,11 @@ plt.xlim([0,8])
 
 plt.show()
 
-#fit = Fit(model, B=xdata, y1=rhoxx, y2=rhoxy)
-#fit_result = fit.execute()
+guess = InteractiveGuess(dictionary, B=xdata, y1=rho_xx_sim, y2=rho_xy_sim, n_points=250)
+guess.execute()
+print(guess)
+
+fit = Fit(model, B=xdata, y1=rho_xx_sim, y2=rho_xy_sim)
+fit_result = fit.execute()
+print(fit_result)
 #y1result, y2result = fit.model(B=xdata, **fit_result.params)
