@@ -4,15 +4,19 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt 
 import math
 import symfit
-from symfit import Variable, Parameter, parameters, Fit, Model, exp, cosh, DiracDelta, CallableNumericalModel
+from symfit import DiracDelta
+from symfit import Variable, Parameter, parameters, Fit, Model, cosh
+from symfit import CallableNumericalModel
 from symfit.contrib.interactive_guess import InteractiveGuess
 import numpy as np
 plt.ion()
+
 
 data = np.loadtxt('PdSn4_010K_rhoData.txt')
 xdata = np.array(data[:, 0])
 rhoxx_exp = np.array(data[:, 1])
 rhoxy_exp = np.array(data[:, 2])
+
 
 
 def sigxy(B,n,mu):
@@ -32,29 +36,38 @@ def sigxx(B,n,mu):
     for i in range (len(B)):
         ydata.append( rho / (rho**2 + (R*B[i])**2) )
     return np.array(ydata)
+    
 
 
-n1, n2 = 1.51e27, -1.519e27
-mu1, mu2 = 1.41, 0.64
+#Carrier Concentrations and Mobilities 
+n1, n2, n3, n4 = 1.51e27, -1.519e27, 0.915e27, -1.047e27
+mu1, mu2, mu3, mu4 = 1.41, 0.64, 0.087, 0.09
 
+#Sum of Carriers Contribution
 sigxy1 = sigxy(xdata, n1, mu1)
 sigxy2 = sigxy(xdata, n2, mu2)
-sigxy = (sigxy1 + sigxy2)
+sigxy3 = sigxy(xdata, n3, mu3)
+sigxy4 = sigxy(xdata, n4, mu4)
+sigxy = (sigxy1 + sigxy2 + sigxy3 + sigxy4)
 
 sigxx1 = sigxx(xdata, n1, mu1)
 sigxx2 = sigxx(xdata, n2, mu2)
-sigxx = (sigxx1 + sigxx2)
+sigxx3 = sigxx(xdata, n3, mu3)
+sigxx4 = sigxx(xdata, n4, mu4)
+sigxx = (sigxx1 + sigxx2 + sigxx3 + sigxx4)
 
+#resistivity tensor components
 rhoxx = sigxx / (sigxx**2 + sigxy**2)
 rhoxy = - sigxy / (sigxx**2 + sigxy**2)
 
+#ionized impurity scattering for rhoxx
 def IIS(B,a,f):
     ydata = []    
     for i in range (len(B)):
         ydata.append( a / (sp.cosh(B[i]/f)) )
     return np.array(ydata)
 
-
+#IIS constant
 a = 1.1513
 f = 0.992
 
@@ -64,14 +77,36 @@ rho_IIS = rhoxx * IIS(xdata,a,f)
 #total longitudinal magnetoresistance
 rhoxx_tot = rhoxx + rho_IIS
 
+#f = plt.figure(figsize=(15,15))
+#ax = f.add_subplot(211)
+#plt.xlabel("Magnetic Field [T]")
+#plt.ylabel("Rho$_{xx}$")
+#plt.plot(xdata, rhoxx_exp, 'k.')
+#plt.plot(xdata, rhoxx, 'r-')
+#plt.plot(xdata, rhoxx_tot, 'b-')
+#plt.xlim([0,8])
+
+
+#ax2 = f.add_subplot(212)
+#plt.xlabel("Magnetic Field [T]")
+#plt.ylabel("Rho$_{xy}$")
+#plt.plot(xdata, rhoxy_exp, 'k.')
+#plt.plot(xdata, rhoxy, 'r-')
+#plt.xlim([0,8])
+
+#plt.show()
 
 B = Variable('B')
 y1 = Variable('y1')
 y2 = Variable('y2')
 n_1 = Parameter('n1', value=n1, min=1.5e27, max=1.55e27) 
 n_2 = Parameter('n2', value=n2, min=-1.52e27, max=-1.51e27)
+n_3 = Parameter('n3', value=n3, min=0.91e27, max=0.92e27)
+n_4 = Parameter('n4', value=n4, min=-1.05e27, max=-1.045e27)
 mu_1 = Parameter('mu1', value=mu1, min=1.4, max=1.42)
 mu_2 = Parameter('mu2', value=mu2, min=0.63, max=0.65)
+mu_3 = Parameter('mu3', value=mu3, min=0.085, max=0.09)
+mu_4 = Parameter('mu4', value=mu4, min=0.088, max=0.092)
 
 a = 1.1513
 f = 0.992
@@ -79,49 +114,97 @@ q = 1.6e-19
 
 R1 = -1 / (q*n_1)
 R2 = -1 / (q*n_2)
+R3 = -1 / (q*n_3)
+R4 = -1 / (q*n_4)
 
-rho1 = 1 / (abs(n_1) * q * mu_1)   
+rho1 = 1 / (abs(n_1) * q * mu_1)    #lambda x:
 rho2 = 1 / (abs(n_2) * q * mu_2)
-
-
+rho3 = 1 / (abs(n_3) * q * mu_3)
+rho4 = 1 / (abs(n_4) * q * mu_4)
+    
 dictionary = ({
 
-    y1: lambda B,n1,n2,mu1,mu2: 
+    y1: lambda B,n1,n2,n3,n4,mu1,mu2,mu3,mu4: 
     
-      (rho1 / (rho1**2 + (R1*B)**2) + rho2 / (rho2**2 + (R2*B)**2)) 
+    (rho1 / (rho1**2 + (R1*B)**2) + rho2 / (rho2**2 + (R2*B)**2) 
     
-    / ((rho1 / (rho1**2 + (R1*B)**2) + rho2 / (rho2**2 + (R2*B)**2))**2)
+    + rho3 / (rho3**2 + (R3*B)**2) + rho4 / (rho4**2 + (R4*B)**2)) 
+    
+    / ((rho1 / (rho1**2 + (R1*B)**2) + rho2 / (rho2**2 + (R2*B)**2) 
+    
+    + rho3 / (rho3**2 + (R3*B)**2) + rho4 / (rho4**2 + (R4*B)**2))**2
        
-       + ((-R1*B)/(rho1**2+(R1*B)**2) + (-R2*B)/(rho2**2+(R2*B)**2))
+       + ((-R1*B)/(rho1**2+(R1*B)**2) + (-R2*B)/(rho2**2+(R2*B)**2)
+                                                
+       + (-R3*B)/(rho3**2+(R3*B)**2) + (-R4*B)/(rho4**2+(R4*B)**2))**2)
     
-    + (a/((exp(B/f)+exp(-B/f))/2)*((rho1 / (rho1**2 + (R1*B)**2) + rho2 / (rho2**2 + (R2*B)**2)) 
+    + (a/(exp(B/f)+exp(-B/f))/2)*((rho1 / (rho1**2 + (R1*B)**2) + rho2 / (rho2**2 + (R2*B)**2) 
     
-    / ((rho1 / (rho1**2 + (R1*B)**2) + rho2 / (rho2**2 + (R2*B)**2))**2
+    + rho3 / (rho3**2 + (R3*B)**2) + rho4 / (rho4**2 + (R4*B)**2)) 
+    
+    / ((rho1 / (rho1**2 + (R1*B)**2) + rho2 / (rho2**2 + (R2*B)**2) 
+    
+    + rho3 / (rho3**2 + (R3*B)**2) + rho4 / (rho4**2 + (R4*B)**2))**2
        
-       + ((-R1*B)/(rho1**2+(R1*B)**2) + (-R2*B)/(rho2**2+(R2*B)**2))**2)))
+       + ((-R1*B)/(rho1**2+(R1*B)**2) + (-R2*B)/(rho2**2+(R2*B)**2)
+                                                
+       + (-R3*B)/(rho3**2+(R3*B)**2) + (-R4*B)/(rho4**2+(R4*B)**2))**2))
     ,
-          
     
-        
-    y2: lambda B,n1,n2,mu1,mu2:
-    
-    - ((-R1*B)/(rho1**2+(R1*B)**2) + (-R2*B)/(rho2**2+(R2*B)**2)) / 
-    
-  ((rho1 / (rho1**2 + (R1*B)**2) + rho2 / (rho2**2 + (R2*B)**2))**2
+   
        
-       + ((-R1*B)/(rho1**2+(R1*B)**2) + (-R2*B)/(rho2**2+(R2*B)**2))**2)
-          
+    y2: lambda B,n1,n2,n3,n4,mu1,mu2,mu3,mu4:
+    
+    - ((-R1*B)/(rho1**2+(R1*B)**2) + (-R2*B)/(rho2**2+(R2*B)**2)
+                                                
+       + (-R3*B)/(rho3**2+(R3*B)**2) + (-R4*B)/(rho4**2+(R4*B)**2)) / 
+    
+  ((rho1 / (rho1**2 + (R1*B)**2) + rho2 / (rho2**2 + (R2*B)**2) 
+    
+    + rho3 / (rho3**2 + (R3*B)**2) + rho4 / (rho4**2 + (R4*B)**2))**2
+       
+       + ((-R1*B)/(rho1**2+(R1*B)**2) + (-R2*B)/(rho2**2+(R2*B)**2)
+                                                
+       + (-R3*B)/(rho3**2+(R3*B)**2) + (-R4*B)/(rho4**2+(R4*B)**2))**2)  
+    
+
+  
 })
-
+    
 mixed_model = CallableNumericalModel(dictionary, 
-                connectivity_mapping = {y1:{B,n_1,n_2,mu_1,mu_2}, 
-                                       y2:{B,n_1,n_2,mu_1,mu_2}})
-
-model_sim = mixed_model(B=xdata, n1=n1, n2=n2, mu1=mu1, mu2=mu2)
-
+                connectivity_mapping = {y1:{B,n_1,n_2,n_3,n_4,mu_1,mu_2,mu_3,mu_4}, 
+                                       y2:{B,n_1,n_2,n_3,n_4,mu_1,mu_2,mu_3,mu_4}})
+#model = Model(dictionary)
+#print(model)
+#####get this bloch working#####
+model_sim = mixed_model(B=xdata, n1=n1, n2=n2, n3=n3, n4=n4, mu1=mu1, mu2=mu2, mu3=mu3, mu4=mu4)
+#print(data)
 rho_xx_sim = model_sim.y1
 rho_xy_sim = model_sim.y2
+#f = plt.figure(figsize=(15,15))
+#ax = f.add_subplot(211)
+#plt.xlabel("Magnetic Field [T]")
+#plt.ylabel("Rho$_{xx}$")
+#plt.plot(xdata, rhoxx_exp, 'k.')
+#plt.plot(xdata, rho_xx_sim, 'r-')
+#plt.xlim([0,8])
 
+
+#ax2 = f.add_subplot(212)
+#plt.xlabel("Magnetic Field [T]")
+#plt.ylabel("Rho$_{xy}$")
+#plt.plot(xdata, rhoxy_exp, 'k.')
+#plt.plot(xdata, rho_xy_sim, 'r-')
+#plt.xlim([0,8])
+
+#plt.show()
+
+#guess = InteractiveGuess(dictionary, B=xdata, y1=rho_xx_sim, y2=rho_xy_sim, n_points=250)
+#guess.execute()
+#print(guess)
+
+        
 fit = Fit(mixed_model, B=xdata, y1=rho_xx_sim, y2=rho_xy_sim)
 fit_result = fit.execute()
 print(fit_result)
+#y1result, y2result = fit.model(B=xdata, **fit_result.params)
